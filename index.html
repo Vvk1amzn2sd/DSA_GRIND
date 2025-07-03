@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSA Challenge Hub</title>
+  
+  <!-- Firebase v9 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  
+  <!-- Monaco Editor -->
+  <script src="https://unpkg.com/monaco-editor@0.34.1/min/vs/loader.js"></script>
+  
+  <!-- Other dependencies -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <div class="auth-section" id="authSection">
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Password" />
+        <button id="signupBtn">Sign Up</button>
+        <button id="loginBtn">Log In</button>
+      </div>
+      <div class="user-info" id="userInfo" style="display: none;">
+        <span id="userEmail"></span>
+        <button id="logoutBtn">Logout</button>
+      </div>
+      <div id="attemptCountDisplay" class="attempt-count"></div>
+    </div>
+    <div class="title-container">
+      <h1 class="main-title">DSA GRIND</h1>
+      <p class="sub-title">by vvk</p>
+      <div id="challengeBanner" class="challenge-banner">Challenge for Jul 15 is live</div>
+    </div>
+    <div class="leaderboard-toggle">
+      <span>★</span> Leaderboard: <span>Daily</span> ⇄
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="question-panel">
+      <div class="question-header">
+        <input type="date" id="datePicker" />
+        <select id="difficultySelect">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+          <option value="god">God Level</option>
+        </select>
+        <select id="problemSelect">
+          <option value="">-- Select Problem --</option>
+        </select>
+      </div>
+      <div id="questionContent" class="question-content">
+        <div class="loading-indicator">
+          <i class="fas fa-spinner fa-spin"></i> Loading question...
+        </div>
+      </div>
+    </div>
+
+    <div class="ide-panel">
+      <div class="ide-header">
+        <div class="language-selector">
+          <div id="langIndicator" class="lang-indicator"></div>
+          <select id="languageSelect">
+            <option value="javascript" selected>JavaScript</option>
+            <option value="python">Python</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+          </select>
+        </div>
+        <div class="timer-controls">
+          <div id="timerDisplay" class="timer-display">0 sec</div>
+          <div class="ide-controls">
+            <button id="startTimerBtn">Start</button>
+            <button id="submitBtn">Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ide-container">
+        <div id="editor" style="height:55vh;"></div>
+        <div class="io-container">
+          <div class="io-section">
+            <label for="stdinInput">Custom Input (stdin)</label>
+            <textarea id="stdinInput"></textarea>
+          </div>
+          <div class="io-section">
+            <label for="runOutput">Output</label>
+            <pre id="runOutput">Output will appear here...</pre>
+          </div>
+        </div>
+        <div id="testResults" class="test-results" style="display:none;">
+          <h4>Test Results</h4>
+          <div id="testSummary" class="test-summary"></div>
+          <div id="testCases" class="test-cases"></div>
+        </div>
+        <div class="run-btn-container">
+          <button id="runButton">▶️ Compile & Run</button>
+        </div>
+        <div id="winnerBanner" class="winner-banner" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    made by vvk for atls with &lt;3
+    <div class="signature">vvk</div>
+  </footer>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
