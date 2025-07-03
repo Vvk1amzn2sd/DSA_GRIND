@@ -34,10 +34,18 @@ body.dark header {
   color: #e0e0e0;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-self: start;
+}
+
 .header-right {
   display: flex;
   align-items: center;
   gap: 1rem;
+  justify-self: end;
 }
 
 .theme-btn {
