@@ -1,0 +1,230 @@
+// ✅ Includes everything: Firebase setup, event handlers, Monaco integration, Judge0 execution, Firebase DB write
+
+// Firebase Config (replace with yours if needed)
+const firebaseConfig = {
+  apiKey: "AIzaSyBxmE8mAJJ5pFkOWC00ct_pWK1Autr2PAo",
+  authDomain: "dsa-challenge.firebaseapp.com",
+  databaseURL: "https://dsa-challenge-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "dsa-challenge",
+  storageBucket: "dsa-challenge.appspot.com",
+  messagingSenderId: "866070092409",
+  appId: "1:866070092409:web:49faada850b1b91bbf52a8",
+  measurementId: "G-P3Y7XMJN2L"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const auth = firebase.auth();
+let currentUser = null;
+
+// DOM Elements
+const signupBtn = document.getElementById("signupBtn");
+const loginBtn = document.getElementById("loginBtn");
+const startTimerBtn = document.getElementById("startTimerBtn");
+const submitBtn = document.getElementById("submitBtn");
+const runButton = document.getElementById("runButton");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const datePicker = document.getElementById("datePicker");
+const difficultySelect = document.getElementById("difficultySelect");
+const langSelector = document.getElementById("languageSelect");
+const editorDiv = document.getElementById("editor");
+const runOutput = document.getElementById("runOutput");
+const stdinInput = document.getElementById("stdinInput");
+const timerDisplay = document.getElementById("timerDisplay");
+const questionContent = document.getElementById("questionContent");
+const attemptCountDisplay = document.getElementById("attemptCountDisplay");
+const winnerBanner = document.getElementById("winnerBanner");
+const challengeBanner = document.getElementById("challengeBanner");
+const testResults = document.getElementById("testResults");
+const testSummary = document.getElementById("testSummary");
+const testCases = document.getElementById("testCases");
+
+let editor, seconds = 0, timer;
+let testCasesData = [];
+
+const langMap = {
+  java: 62, cpp: 54, c: 50, python: 71, javascript: 63, typescript: 74,
+  ruby: 72, csharp: 51, go: 60, php: 68, swift: 83, rust: 73, sql: 82, assembly: 86
+};
+
+// Monaco Editor Init
+require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@0.34.1/min/vs' }});
+require(['vs/editor/editor.main'], function () {
+  editor = monaco.editor.create(editorDiv, {
+    value: "// Write your code here...",
+    language: "javascript",
+    theme: "vs-dark",
+    fontSize: 14,
+    minimap: { enabled: true },
+    automaticLayout: true
+  });
+});
+
+// Auth handlers
+signupBtn.onclick = () => {
+  const email = emailInput.value;
+  const pass = passwordInput.value;
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(() => alert("Signup successful"))
+    .catch(err => alert(err.message));
+};
+
+loginBtn.onclick = () => {
+  const email = emailInput.value;
+  const pass = passwordInput.value;
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(() => alert("Login successful"))
+    .catch(err => alert(err.message));
+};
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.querySelector(".auth-section").style.display = "none";
+    document.querySelector(".challenge").style.display = "block";
+    loadQuestion();
+    updateAttemptCount();
+  }
+});
+
+// Date and Question Load
+function getTodayInfo() {
+  const d = new Date(datePicker.value || new Date());
+  const day = d.getDate();
+  const month = d.toLocaleString("default", { month: "long" }).toUpperCase();
+  return { day, month };
+}
+
+async function loadQuestion() {
+  const { day, month } = getTodayInfo();
+  const difficulty = difficultySelect.value;
+
+  const questionURL = `https://raw.githubusercontent.com/Vvk1amzn2sd/DSA_practise_vvk/main/Questions/${month}/${day}/${difficulty}.md`;
+ // const testCaseURL = `https://raw.githubusercontent.com/Vvk1amzn2sd/DSA_practise_vvk/main/Questions/${month}/${day}/${difficulty}_test_cases.json`;
+
+  questionContent.innerHTML = "Loading...";
+
+  try {
+    const q = await fetch(questionURL);
+    questionContent.innerHTML = marked.parse(await q.text());
+
+    const t = await fetch(testCaseURL);
+    testCasesData = await t.json();
+    if (testCasesData.length) stdinInput.value = testCasesData[0].input;
+  } catch (e) {
+    questionContent.innerHTML = "Error loading question or test cases.";
+  }
+}
+
+// Timer
+startTimerBtn.onclick = () => {
+  seconds = 0;
+  timerDisplay.textContent = "0s";
+  clearInterval(timer);
+  timer = setInterval(() => {
+    seconds++;
+    timerDisplay.textContent = `${seconds}s`;
+  }, 1000);
+};
+
+// Judge0 Run Code
+runButton.onclick = async () => {
+  const code = editor.getValue();
+  const lang = langMap[langSelector.value];
+  const stdin = stdinInput.value;
+
+  runOutput.textContent = "Running...";
+
+  const res = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
+      "x-rapidapi-key": "1ac6d75981msh80a21e7c5ff6a9dp18f155jsn216aa37e0e81"
+    },
+    body: JSON.stringify({
+      language_id: lang,
+      source_code: code,
+      stdin,
+      redirect_stderr_to_stdout: true
+    })
+  });
+
+  const data = await res.json();
+  runOutput.innerHTML = (data.stdout || data.stderr || "No output").replace(/\n/g, "<br>");
+};
+
+// Submit and Store to Firebase
+submitBtn.onclick = async () => {
+  clearInterval(timer);
+  const timeTaken = seconds;
+  const code = editor.getValue();
+  const lang = langSelector.value;
+  const language_id = langMap[lang];
+  let passed = 0;
+
+  testCases.innerHTML = "";
+  testResults.style.display = "block";
+  testSummary.innerHTML = "Evaluating...";
+
+  for (const [i, tc] of testCasesData.entries()) {
+    const res = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-rapidapi-host": "judge0-ce.p.rapidapi.com",
+        "x-rapidapi-key": "1ac6d75981msh80a21e7c5ff6a9dp18f155jsn216aa37e0e81"
+      },
+      body: JSON.stringify({ language_id, source_code: code, stdin: tc.input })
+    });
+    const out = await res.json();
+    const actual = (out.stdout || "").trim();
+    const expected = tc.expected.trim();
+
+    const div = document.createElement("div");
+    div.innerHTML = `<strong>Test ${i + 1}:</strong><br>Input: ${tc.input}<br>Expected: ${expected}<br>Got: ${actual}`;
+    div.style.background = actual === expected ? "#d4edda" : "#f8d7da";
+    testCases.appendChild(div);
+
+    if (actual === expected) passed++;
+  }
+
+  const resultStatus = passed === testCasesData.length ? "PASS" : "FAIL";
+  testSummary.innerHTML = `✅ ${passed} / ${testCasesData.length} passed<br>Status: ${resultStatus}`;
+
+  if (currentUser) {
+    const { day, month } = getTodayInfo();
+    const username = currentUser.email.split("@")[0];
+    const submission = { username, time: timeTaken, passed, total: testCasesData.length, code, lang, result: resultStatus, timestamp: Date.now() };
+    const baseRef = database.ref(`solutions/${month}/${day}/${lang}/${username}`);
+    baseRef.set(submission);
+
+    updateAttemptCount();
+
+    const winnerRef = database.ref(`winners/${month}_${day}_${lang}`);
+    winnerRef.once("value").then(snap => {
+      if (!snap.val() || timeTaken < snap.val().time) {
+        winnerRef.set({ username, time: timeTaken });
+        winnerBanner.textContent = `${username} is leading in ${lang} with ${timeTaken}s!`;
+        winnerBanner.style.display = "block";
+        setTimeout(() => winnerBanner.style.display = "none", 10000);
+      }
+    });
+  }
+};
+
+// Attempts
+function updateAttemptCount() {
+  if (!currentUser) return;
+  const today = new Date().toISOString().split("T")[0];
+  const ref = database.ref(`attempts/${currentUser.uid}/${today}`);
+  ref.transaction(count => (count || 0) + 1).then(snap => {
+    attemptCountDisplay.textContent = `Attempts: ${snap.snapshot.val()}`;
+  });
+}
+
+// Change Event
+datePicker.onchange = loadQuestion;
+difficultySelect.onchange = loadQuestion;
