@@ -33,21 +33,25 @@
         <span id="userEmail"></span>
         <button id="logoutBtn">Logout</button>
       </div>
-      <div id="attemptCountDisplay" class="attempt-count"></div>
     </div>
     <div class="title-container">
       <h1 class="main-title">DSA GRIND</h1>
       <p class="sub-title">by vvk</p>
       <div id="challengeBanner" class="challenge-banner">Challenge for Jul 15 is live</div>
     </div>
-    <div class="leaderboard-toggle">
-      <span>★</span> Leaderboard: <span>Daily</span> ⇄
+    <div class="header-right">
+      <div class="theme-toggle">
+        <button id="themeToggle">🌙 Dark</button>
+      </div>
+      <div class="leaderboard-toggle">
+        <span>★</span> Leaderboard: <span>Daily</span> ⇄
+      </div>
     </div>
   </header>
 
-  <div class="container">
-    <div class="question-panel">
-      <div class="question-header">
+  <div class="main-container">
+    <div class="question-section">
+      <div class="question-controls">
         <input type="date" id="datePicker" />
         <select id="difficultySelect">
           <option value="easy">Easy</option>
@@ -66,7 +70,7 @@
       </div>
     </div>
 
-    <div class="ide-panel">
+    <div class="ide-section">
       <div class="ide-header">
         <div class="language-selector">
           <div id="langIndicator" class="lang-indicator"></div>
@@ -75,6 +79,15 @@
             <option value="python">Python</option>
             <option value="cpp">C++</option>
             <option value="java">Java</option>
+            <option value="c">C</option>
+            <option value="csharp">C#</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="php">PHP</option>
+            <option value="ruby">Ruby</option>
+            <option value="swift">Swift</option>
+            <option value="kotlin">Kotlin</option>
+            <option value="typescript">TypeScript</option>
           </select>
         </div>
         <div class="timer-controls">
@@ -87,7 +100,7 @@
       </div>
 
       <div class="ide-container">
-        <div id="editor" style="height:55vh;"></div>
+        <div id="editor"></div>
         <div class="io-container">
           <div class="io-section">
             <label for="stdinInput">Custom Input (stdin)</label>
@@ -98,16 +111,19 @@
             <pre id="runOutput">Output will appear here...</pre>
           </div>
         </div>
-        <div id="testResults" class="test-results" style="display:none;">
-          <h4>Test Results</h4>
-          <div id="testSummary" class="test-summary"></div>
-          <div id="testCases" class="test-cases"></div>
-        </div>
         <div class="run-btn-container">
           <button id="runButton">▶️ Compile & Run</button>
         </div>
-        <div id="winnerBanner" class="winner-banner" style="display:none;"></div>
       </div>
+      
+      <div id="testResults" class="test-results" style="display:none;">
+        <h4>Test Results</h4>
+        <div id="testSummary" class="test-summary"></div>
+        <div id="testCases" class="test-cases"></div>
+      </div>
+      
+      <div id="winnerBanner" class="winner-banner" style="display:none;"></div>
+      <div id="submissionStatus" class="submission-status" style="display:none;"></div>
     </div>
   </div>
 

@@ -50,6 +50,8 @@ const testCases = document.getElementById("testCases");
 const authSection = document.getElementById("authSection");
 const userInfo = document.getElementById("userInfo");
 const userEmail = document.getElementById("userEmail");
+const themeToggle = document.getElementById("themeToggle");
+const submissionStatus = document.getElementById("submissionStatus");
 
 // Language mapping for Judge0
 const langMap = {
@@ -64,7 +66,8 @@ const langMap = {
   go: 60,
   php: 68,
   swift: 83,
-  rust: 73
+  rust: 73,
+  kotlin: 78
 };
 
 // Template code for different languages
@@ -77,6 +80,7 @@ function solution(input) {
 
 // Example usage
 console.log(solution("test input"));`,
+  
   python: `# Write your Python solution here
 def solution(input_str):
     # Your code here
@@ -84,6 +88,7 @@ def solution(input_str):
 
 # Example usage
 print(solution("test input"))`,
+  
   cpp: `#include <iostream>
 #include <string>
 #include <vector>
@@ -101,6 +106,7 @@ int main() {
     cout << solution(input) << endl;
     return 0;
 }`,
+  
   java: `import java.util.*;
 import java.io.*;
 
@@ -116,7 +122,124 @@ public class Solution {
         String input = br.readLine();
         System.out.println(solution(input));
     }
-}`
+}`,
+  
+  c: `#include <stdio.h>
+#include <string.h>
+
+// Write your C solution here
+int main() {
+    char input[1000];
+    fgets(input, sizeof(input), stdin);
+    
+    // Your code here
+    
+    return 0;
+}`,
+  
+  csharp: `using System;
+
+class Program {
+    // Write your C# solution here
+    static string Solution(string input) {
+        // Your code here
+        return result;
+    }
+    
+    static void Main() {
+        string input = Console.ReadLine();
+        Console.WriteLine(Solution(input));
+    }
+}`,
+  
+  go: `package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+)
+
+// Write your Go solution here
+func solution(input string) string {
+    // Your code here
+    return result
+}
+
+func main() {
+    scanner := bufio.NewScanner(os.Stdin)
+    scanner.Scan()
+    input := scanner.Text()
+    fmt.Println(solution(input))
+}`,
+  
+  rust: `use std::io;
+
+// Write your Rust solution here
+fn solution(input: &str) -> String {
+    // Your code here
+    result
+}
+
+fn main() {
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    let input = input.trim();
+    println!("{}", solution(input));
+}`,
+  
+  php: `<?php
+// Write your PHP solution here
+function solution($input) {
+    // Your code here
+    return $result;
+}
+
+$input = trim(fgets(STDIN));
+echo solution($input);
+?>`,
+  
+  ruby: `# Write your Ruby solution here
+def solution(input)
+    # Your code here
+    result
+end
+
+input = gets.chomp
+puts solution(input)`,
+  
+  swift: `import Foundation
+
+// Write your Swift solution here
+func solution(_ input: String) -> String {
+    // Your code here
+    return result
+}
+
+let input = readLine() ?? ""
+print(solution(input))`,
+  
+  kotlin: `import java.util.*
+
+// Write your Kotlin solution here
+fun solution(input: String): String {
+    // Your code here
+    return result
+}
+
+fun main() {
+    val input = readLine() ?: ""
+    println(solution(input))
+}`,
+  
+  typescript: `// Write your TypeScript solution here
+function solution(input: string): string {
+    // Your code here
+    return result;
+}
+
+// Example usage
+console.log(solution("test input"));`
 };
 
 // Initialize date picker with today's date
@@ -169,11 +292,44 @@ function updateLanguageIndicator() {
     javascript: '#f7df1e',
     python: '#3776ab',
     cpp: '#00599c',
-    java: '#ed8b00'
+    java: '#ed8b00',
+    c: '#a8b9cc',
+    csharp: '#239120',
+    go: '#00add8',
+    rust: '#ce422b',
+    php: '#777bb3',
+    ruby: '#cc342d',
+    swift: '#fa7343',
+    kotlin: '#7f52ff',
+    typescript: '#3178c6'
   };
   
   if (indicator) {
     indicator.style.background = langColors[languageSelect.value] || '#28a745';
+  }
+}
+
+// Theme toggle functionality
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  themeToggle.textContent = isDark ? '☀️ Light' : '🌙 Dark';
+  
+  // Save theme preference
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  
+  // Update Monaco editor theme
+  if (editor) {
+    monaco.editor.setTheme(isDark ? 'vs-dark' : 'vs');
+  }
+}
+
+// Initialize theme
+function initializeTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+    themeToggle.textContent = '☀️ Light';
   }
 }
 
@@ -275,6 +431,45 @@ function getDateInfo() {
   return { day, month };
 }
 
+// Check if user has already submitted for this question
+async function checkSubmissionStatus() {
+  if (!currentUser) return false;
+  
+  const { day, month } = getDateInfo();
+  const difficulty = difficultySelect.value;
+  const language = languageSelect.value;
+  const username = currentUser.email.split('@')[0];
+  
+  try {
+    const submissionRef = database.ref(`solutions/${month}/${day}/${difficulty}/${language}/${username}`);
+    const snapshot = await submissionRef.once('value');
+    
+    if (snapshot.exists()) {
+      const submission = snapshot.val();
+      submissionStatus.innerHTML = `
+        <div>✅ Already submitted in ${language}</div>
+        <div>Time: ${submission.time}s | Result: ${submission.result}</div>
+      `;
+      submissionStatus.className = 'submission-status already-submitted';
+      submissionStatus.style.display = 'block';
+      
+      // Disable submit button
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Already Submitted';
+      
+      return true;
+    } else {
+      submissionStatus.style.display = 'none';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit';
+      return false;
+    }
+  } catch (error) {
+    console.error('Failed to check submission status:', error);
+    return false;
+  }
+}
+
 // Load question from GitHub repository
 async function loadQuestion() {
   if (!currentUser) {
@@ -320,6 +515,9 @@ async function loadQuestion() {
       console.warn('Failed to load test cases:', testCaseError.message);
       testCasesData = [];
     }
+    
+    // Check submission status
+    await checkSubmissionStatus();
     
   } catch (error) {
     console.error('Failed to load question:', error);
@@ -624,8 +822,11 @@ async function updateAttemptCount() {
   }
 }
 
-// Language change handler
-languageSelect.addEventListener('change', () => {
+// Theme toggle event listener
+themeToggle.addEventListener('click', toggleTheme);
+
+// Language change handler - also check submission status
+languageSelect.addEventListener('change', async () => {
   const selectedLang = languageSelect.value;
   
   if (editor && languageTemplates[selectedLang]) {
@@ -635,6 +836,11 @@ languageSelect.addEventListener('change', () => {
   }
   
   updateLanguageIndicator();
+  
+  // Check submission status for new language
+  if (currentUser) {
+    await checkSubmissionStatus();
+  }
 });
 
 // Date and difficulty change handlers
@@ -647,6 +853,7 @@ difficultySelect.addEventListener('change', loadQuestion);
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
+  initializeTheme();
   initializeDatePicker();
   initializeMonacoEditor();
   
