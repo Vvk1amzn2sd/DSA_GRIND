@@ -22,32 +22,35 @@
 </head>
 <body>
   <header>
-    <div class="header-left">
-      <div class="auth-section" id="authSection">
-        <input type="email" id="email" placeholder="Email" />
-        <input type="password" id="password" placeholder="Password" />
-        <button id="signupBtn">Sign Up</button>
-        <button id="loginBtn">Log In</button>
-      </div>
-      <div class="user-info" id="userInfo" style="display: none;">
-        <span id="userEmail"></span>
-        <button id="logoutBtn">Logout</button>
-      </div>
+    <div class="auth-section" id="authSection">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="signupBtn">Sign Up</button>
+      <button id="loginBtn">Log In</button>
     </div>
+    <div class="user-info" id="userInfo" style="display: none;">
+      <span id="userEmail"></span>
+      <button id="logoutBtn">Logout</button>
+    </div>
+    
     <div class="title-container">
       <h1 class="main-title">DSA GRIND</h1>
       <p class="sub-title">by vvk</p>
       <div id="challengeBanner" class="challenge-banner">Challenge for Jul 15 is live</div>
     </div>
+    
     <div class="header-right">
-      <div class="theme-toggle">
-        <button id="themeToggle">🌙 Dark</button>
-      </div>
+      <button id="themeToggle" class="theme-btn">🌙 Dark</button>
       <div class="leaderboard-toggle">
         <span>★</span> Leaderboard: <span>Daily</span> ⇄
       </div>
     </div>
   </header>
+
+  <div class="problem-solution-nav">
+    <div class="nav-item active" data-tab="problem">Problem</div>
+    <div class="nav-item" data-tab="solution">Solution</div>
+  </div>
 
   <div class="main-container">
     <div class="question-section">

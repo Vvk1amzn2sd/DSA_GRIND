@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSA Challenge Hub</title>
+  
+  <!-- Firebase v9 SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  
+  <!-- Monaco Editor -->
+  <script src="https://unpkg.com/monaco-editor@0.34.1/min/vs/loader.js"></script>
+  
+  <!-- Other dependencies -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- Environment variables script -->
+  <script>
+    // Make environment variables available globally
+    window.VITE_FIREBASE_API_KEY = 'REPLACE_WITH_YOUR_API_KEY';
+    window.VITE_FIREBASE_PROJECT_ID = 'REPLACE_WITH_YOUR_PROJECT_ID';
+    window.VITE_FIREBASE_APP_ID = 'REPLACE_WITH_YOUR_APP_ID';
+  </script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      transition: all 0.3s ease;
+    }
+
+    body.dark {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+    }
+
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+    }
+
+    body.dark header {
+      background: rgba(26, 26, 46, 0.95);
+      color: #e0e0e0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .theme-btn {
+      padding: 0.5rem 1rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .theme-btn:hover {
+      background: #5a6fd8;
+    }
+
+    .problem-solution-nav {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0.5rem 2rem;
+      display: flex;
+      gap: 2rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    body.dark .problem-solution-nav {
+      background: rgba(26, 26, 46, 0.9);
+      border-bottom: 1px solid #444;
+    }
+
+    .nav-item {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+
+    .nav-item:hover {
+      color: #667eea;
+    }
+
+    .nav-item.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .auth-section {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .auth-section input {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .auth-section button, .ide-controls button, #runButton, #logoutBtn {
+      padding: 0.5rem 1rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+    }
+
+    .auth-section button:hover, .ide-controls button:hover, #runButton:hover, #logoutBtn:hover {
+      background: #5a6fd8;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: #667eea;
+      font-weight: 500;
+    }
+
+    .attempt-count {
+      background: #f8f9fa;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .title-container {
+      text-align: center;
+      flex: 1;
+    }
+
+    .main-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .sub-title {
+      color: #666;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .challenge-banner {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    .leaderboard-toggle {
+      color: #667eea;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 1800px;
+      margin: 0 auto;
+      height: calc(100vh - 140px);
+    }
+
+    .question-section, .ide-section {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark .question-section, 
+    body.dark .ide-section {
+      background: rgba(42, 42, 62, 0.95);
+      color: #e0e0e0;
+    }
+
+    .question-controls {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .ide-header {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    body.dark .question-controls,
+    body.dark .ide-header {
+      background: rgba(26, 26, 46, 0.8);
+      border-bottom: 1px solid #444;
+    }
+
+    .question-controls select, .ide-header select, #datePicker {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      background: white;
+    }
+
+    body.dark .question-controls select,
+    body.dark .ide-header select,
+    body.dark #datePicker {
+      background: #333;
+      color: #e0e0e0;
+      border: 1px solid #555;
+    }
+
+    .question-content {
+      padding: 1rem;
+      flex: 1;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    body.dark .question-content {
+      color: #e0e0e0;
+    }
+
+    .loading-indicator {
+      text-align: center;
+      color: #667eea;
+      font-size: 1.1rem;
+    }
+
+    .loading-indicator i {
+      margin-right: 0.5rem;
+    }
+
+    .language-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .lang-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #28a745;
+    }
+
+    .timer-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-left: auto;
+    }
+
+    .timer-display {
+      background: #343a40;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+
+    .ide-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .ide-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #editor {
+      height: 40vh;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .io-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      min-height: 120px;
+    }
+
+    body.dark .io-container {
+      background: rgba(26, 26, 46, 0.8);
+    }
+
+    .io-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .io-section label {
+      font-weight: 500;
+      color: #495057;
+    }
+
+    .io-section textarea {
+      height: 100px;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+
+    .io-section pre {
+      height: 100px;
+      padding: 0.5rem;
+      background: #343a40;
+      color: #f8f9fa;
+      border-radius: 4px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+    }
+
+    .test-results {
+      padding: 1rem;
+      background: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    body.dark .test-results {
+      background: rgba(26, 26, 46, 0.8);
+      border-top: 1px solid #444;
+    }
+
+    .submission-status {
+      padding: 1rem;
+      background: #e8f5e8;
+      border-top: 1px solid #dee2e6;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    .submission-status.already-submitted {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    body.dark .submission-status {
+      background: rgba(40, 167, 69, 0.2);
+      color: #90ee90;
+    }
+
+    body.dark .submission-status.already-submitted {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffd700;
+    }
+
+    .test-summary {
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .test-cases {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .test-case {
+      padding: 0.75rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      border-left: 4px solid;
+    }
+
+    .test-case.pass {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+
+    .test-case.fail {
+      background: #f8d7da;
+      border-color: #dc3545;
+    }
+
+    .run-btn-container {
+      padding: 1rem;
+      text-align: center;
+      background: #f8f9fa;
+    }
+
+    #runButton {
+      background: #28a745;
+      font-size: 1rem;
+      padding: 0.75rem 2rem;
+    }
+
+    #runButton:hover {
+      background: #218838;
+    }
+
+    .winner-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-weight: 500;
+      z-index: 10;
+      animation: slideDown 0.5s ease;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.8);
+      position: relative;
+    }
+
+    .signature {
+      position: absolute;
+      bottom: 1rem;
+      right: 2rem;
+      font-style: italic;
+      opacity: 0.6;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(0); }
+    }
+
+    @media (max-width: 1200px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      
+      header {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      .header-left,
+      .header-right {
+        justify-self: center;
+      }
+      
+      .io-container {
+        grid-template-columns: 1fr;
+      }
+      
+      #editor {
+        height: 30vh;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        padding: 1rem;
+      }
+      
+      .auth-section {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .auth-section input {
+        width: 100%;
+      }
+      
+      .question-controls, .ide-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .timer-controls {
+        margin-left: 0;
+        justify-content: space-between;
+      }
+    }
+
+    /* Question content styling */
+    .question-content h1, .question-content h2, .question-content h3 {
+      color: #667eea;
+      margin: 1rem 0 0.5rem 0;
+    }
+
+    .question-content p {
+      margin-bottom: 1rem;
+    }
+
+    .question-content code {
+      background: #f8f9fa;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .question-content pre {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .question-content ul, .question-content ol {
+      margin-left: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .question-content blockquote {
+      border-left: 4px solid #667eea;
+      padding-left: 1rem;
+      margin: 1rem 0;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="auth-section" id="authSection">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="signupBtn">Sign Up</button>
+      <button id="loginBtn">Log In</button>
+    </div>
+    <div class="user-info" id="userInfo" style="display: none;">
+      <span id="userEmail"></span>
+      <button id="logoutBtn">Logout</button>
+    </div>
+    
+    <div class="title-container">
+      <h1 class="main-title">DSA GRIND</h1>
+      <p class="sub-title">by vvk</p>
+      <div id="challengeBanner" class="challenge-banner">Challenge for Jul 15 is live</div>
+    </div>
+    
+    <div class="header-right">
+      <button id="themeToggle" class="theme-btn">🌙 Dark</button>
+      <div class="leaderboard-toggle">
+        <span>★</span> Leaderboard: <span>Daily</span> ⇄
+      </div>
+    </div>
+  </header>
+
+  <div class="problem-solution-nav">
+    <div class="nav-item active" data-tab="problem">Problem</div>
+    <div class="nav-item" data-tab="solution">Solution</div>
+  </div>
+
+  <div class="main-container">
+    <div class="question-section">
+      <div class="question-controls">
+        <input type="date" id="datePicker" />
+        <select id="difficultySelect">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+          <option value="god">God Level</option>
+        </select>
+        <select id="problemSelect">
+          <option value="">-- Select Problem --</option>
+        </select>
+        <div id="attemptCountDisplay" class="attempt-count"></div>
+      </div>
+      <div id="questionContent" class="question-content">
+        <div class="loading-indicator">
+          <i class="fas fa-spinner fa-spin"></i> Loading question...
+        </div>
+      </div>
+    </div>
+
+    <div class="ide-section">
+      <div class="ide-header">
+        <div class="language-selector">
+          <div id="langIndicator" class="lang-indicator"></div>
+          <select id="languageSelect">
+            <option value="javascript" selected>JavaScript</option>
+            <option value="python">Python</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+            <option value="c">C</option>
+            <option value="csharp">C#</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="php">PHP</option>
+            <option value="ruby">Ruby</option>
+            <option value="swift">Swift</option>
+            <option value="kotlin">Kotlin</option>
+            <option value="typescript">TypeScript</option>
+          </select>
+        </div>
+        <div class="timer-controls">
+          <div id="timerDisplay" class="timer-display">0 sec</div>
+          <div class="ide-controls">
+            <button id="startTimerBtn">Start</button>
+            <button id="submitBtn">Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ide-container">
+        <div id="editor"></div>
+        <div class="io-container">
+          <div class="io-section">
+            <label for="stdinInput">Custom Input (stdin)</label>
+            <textarea id="stdinInput"></textarea>
+          </div>
+          <div class="io-section">
+            <label for="runOutput">Output</label>
+            <pre id="runOutput">Output will appear here...</pre>
+          </div>
+        </div>
+        <div class="run-btn-container">
+          <button id="runButton">▶️ Compile & Run</button>
+        </div>
+      </div>
+      
+      <div id="testResults" class="test-results" style="display:none;">
+        <h4>Test Results</h4>
+        <div id="testSummary" class="test-summary"></div>
+        <div id="testCases" class="test-cases"></div>
+      </div>
+      
+      <div id="winnerBanner" class="winner-banner" style="display:none;"></div>
+      <div id="submissionStatus" class="submission-status" style="display:none;"></div>
+    </div>
+  </div>
+
+  <footer>
+    made by vvk for atls with &lt;3
+    <div class="signature">vvk</div>
+  </footer>
+
+  <script src="main_deploy.js"></script>
+</body>
+</html>

@@ -23,9 +23,10 @@ header {
   padding: 1rem 2rem;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
+  position: relative;
 }
 
 body.dark header {
@@ -33,21 +34,13 @@ body.dark header {
   color: #e0e0e0;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  justify-self: start;
-}
-
 .header-right {
   display: flex;
   align-items: center;
   gap: 1rem;
-  justify-self: end;
 }
 
-.theme-toggle button {
+.theme-btn {
   padding: 0.5rem 1rem;
   background: #667eea;
   color: white;
@@ -58,8 +51,38 @@ body.dark header {
   transition: background 0.3s;
 }
 
-.theme-toggle button:hover {
+.theme-btn:hover {
   background: #5a6fd8;
+}
+
+.problem-solution-nav {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 2rem;
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+body.dark .problem-solution-nav {
+  background: rgba(26, 26, 46, 0.9);
+  border-bottom: 1px solid #444;
+}
+
+.nav-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.nav-item:hover {
+  color: #667eea;
+}
+
+.nav-item.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
 }
 
 .auth-section {
