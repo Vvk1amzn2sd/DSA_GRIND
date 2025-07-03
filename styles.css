@@ -20,12 +20,13 @@ body.dark {
 header {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.5rem;
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   position: relative;
+  min-height: 60px;
 }
 
 body.dark header {
@@ -36,8 +37,9 @@ body.dark header {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   flex: 0 0 auto;
+  margin-top: 0.2rem;
 }
 
 .title-container {
@@ -46,24 +48,26 @@ body.dark header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.1rem;
+  margin-top: 0.2rem;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   flex: 0 0 auto;
+  margin-top: 0.2rem;
 }
 
 .theme-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.6rem;
   background: #667eea;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: background 0.3s;
 }
 
@@ -103,25 +107,27 @@ body.dark .problem-solution-nav {
 
 .auth-section {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.3rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .auth-section input {
-  padding: 0.5rem;
+  padding: 0.3rem 0.5rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  width: 120px;
 }
 
 .auth-section button, .ide-controls button, #runButton, #logoutBtn {
-  padding: 0.5rem 1rem;
+  padding: 0.3rem 0.6rem;
   background: #667eea;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: background 0.3s;
 }
 
@@ -148,27 +154,27 @@ body.dark .problem-solution-nav {
 
 
 .main-title {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   font-weight: 900;
   background: linear-gradient(45deg, #667eea, #764ba2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 .sub-title {
   color: #666;
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.2rem;
 }
 
 .challenge-banner {
   background: linear-gradient(45deg, #ff6b6b, #ee5a24);
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
   font-weight: 500;
   display: inline-block;
   animation: pulse 2s infinite;
@@ -178,16 +184,17 @@ body.dark .problem-solution-nav {
   color: #667eea;
   font-weight: 500;
   cursor: pointer;
+  font-size: 0.8rem;
 }
 
 .main-container {
   display: grid;
   grid-template-columns: 1fr 3fr;
   gap: 1rem;
-  padding: 1rem;
+  padding: 0.5rem;
   max-width: 1800px;
   margin: 0 auto;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 80px);
 }
 
 .question-section, .ide-section {
@@ -253,6 +260,8 @@ body.dark #datePicker {
   flex: 1;
   overflow-y: auto;
   line-height: 1.6;
+  max-height: none;
+  height: auto;
 }
 
 body.dark .question-content {
