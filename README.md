@@ -1,4 +1,4 @@
-# DSA_GRIND — Daily DSA Challenge Platform
+# DSA_GRIND — DSA Challenge Hub _by vvk_
 
 This is a full-stack web app for daily DSA (Data Structures & Algorithms) practice.
 
