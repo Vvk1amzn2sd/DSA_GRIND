@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
+const admin = require('firebase-admin');
 
 const app = express();
 
@@ -10,52 +11,56 @@ app.use(express.json());
 
 // Judge0 Configuration
 const JUDGE0_API = "https://judge0-ce.p.rapidapi.com/submissions";
-const RAPIDAPI_KEY = "1ac6d75981msh80a21e7c5ff6a9dp18f155jsn216aa37e0e81"; // Direct API key
+const RAPIDAPI_KEY = "1ac6d75981msh80a21e7c5ff6a9dp18f155jsn216aa37e0e81";
 const JUDGE0_HEADERS = {
   'Content-Type': 'application/json',
   'X-RapidAPI-Key': RAPIDAPI_KEY,
   'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com'
 };
 
+// Initialize Firebase Admin
+try {
+  const serviceAccount = require('./serviceAccountKey.json');
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://dsa-challenge-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+ // Update with your project ID
+  });
+  console.log('✅ Firebase Admin initialized');
+} catch (error) {
+  console.error('❌ Firebase initialization error:', error.message);
+  console.log('⚠️  Continuing without Firebase features');
+}
+
 // Language ID mapping
 const LANGUAGE_IDS = {
   'cpp': 54,
   'java': 62,
   'python': 71,
-  'javascript': 63,
-  'c': 50,
-  'csharp': 51,
-  'ruby': 72,
-  'swift': 83,
-  'go': 60,
-  'rust': 73
+  'javascript': 63
 };
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy' });
-});
-
-// Code execution endpoint
+// Enhanced execution endpoint with Firebase logging
 app.post('/execute', async (req, res) => {
+  const { source_code, language, stdin, userId } = req.body;
+  
+  // Validate input
+  if (!source_code || !language) {
+    return res.status(400).json({ 
+      error: "Missing required fields: source_code and language" 
+    });
+  }
+
+  const language_id = LANGUAGE_IDS[language.toLowerCase()];
+  if (!language_id) {
+    return res.status(400).json({ 
+      error: "Unsupported language",
+      supported_languages: Object.keys(LANGUAGE_IDS)
+    });
+  }
+
   try {
-    const { source_code, language, stdin } = req.body;
-    
-    // Validate input
-    if (!source_code || !language) {
-      return res.status(400).json({ 
-        error: "Missing required fields: source_code and language" 
-      });
-    }
-
-    const language_id = LANGUAGE_IDS[language.toLowerCase()];
-    if (!language_id) {
-      return res.status(400).json({ 
-        error: "Unsupported language",
-        supported_languages: Object.keys(LANGUAGE_IDS)
-      });
-    }
-
     // Execute code via Judge0
     const response = await axios.post(
       `${JUDGE0_API}?base64_encoded=false&wait=true`,
@@ -67,6 +72,22 @@ app.post('/execute', async (req, res) => {
       },
       { headers: JUDGE0_HEADERS }
     );
+
+    // Log execution to Firebase if available
+    if (admin.apps.length) {
+      try {
+        const db = admin.firestore();
+        await db.collection('code_executions').add({
+          userId: userId || 'anonymous',
+          code: source_code,
+          language,
+          result: response.data,
+          timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (firebaseError) {
+        console.error('Firebase logging failed:', firebaseError.message);
+      }
+    }
 
     // Return execution results
     res.json({
@@ -90,10 +111,24 @@ app.post('/execute', async (req, res) => {
   }
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  const status = {
+    server: 'running',
+    firebase: admin.apps.length ? 'connected' : 'not connected',
+    judge0: 'configured',
+    timestamp: new Date().toISOString()
+  };
+  res.status(200).json(status);
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🔌 Connected to Judge0 API`);
-  console.log(`🌐 Supported languages: ${Object.keys(LANGUAGE_IDS).join(', ')}`);
+  console.log(`\n✅ Server running on port ${PORT}`);
+  console.log(`🔌 Judge0 API configured`);
+  console.log(`🔥 Firebase status: ${admin.apps.length ? 'connected' : 'not connected'}`);
+  console.log(`\nEndpoints:`);
+  console.log(`- POST http://localhost:${PORT}/execute`);
+  console.log(`- GET  http://localhost:${PORT}/health\n`);
 });
