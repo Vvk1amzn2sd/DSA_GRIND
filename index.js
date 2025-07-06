@@ -23,9 +23,7 @@ try {
   const serviceAccount = require('./serviceAccountKey.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://dsa-challenge-default-rtdb.asia-southeast1.firebasedatabase.app",
-
- // Update with your project ID
+    databaseURL: "https://dsa-challenge-default-rtdb.asia-southeast1.firebasedatabase.app"; // Update project ID
   });
   console.log('✅ Firebase Admin initialized');
 } catch (error) {
