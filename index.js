@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
 
 const app = express();
 
@@ -23,13 +24,15 @@ try {
   const serviceAccount = require('./serviceAccountKey.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://dsa-challenge-default-rtdb.asia-southeast1.firebasedatabase.app"; // Update project ID
+    databaseURL: "https://dsa-challenge-default-rtdb.asia-southeast1.firebasedatabase.app"
   });
   console.log('✅ Firebase Admin initialized');
 } catch (error) {
   console.error('❌ Firebase initialization error:', error.message);
   console.log('⚠️  Continuing without Firebase features');
 }
+
+const db = getFirestore();
 
 // Language ID mapping
 const LANGUAGE_IDS = {
@@ -39,9 +42,40 @@ const LANGUAGE_IDS = {
   'javascript': 63
 };
 
-// Enhanced execution endpoint with Firebase logging
+// API Endpoints
+
+// Get questions by date and difficulty
+app.get('/questions', async (req, res) => {
+  try {
+    const { date, difficulty } = req.query;
+    
+    if (!date || !difficulty) {
+      return res.status(400).json({ 
+        error: "Missing required parameters: date and difficulty" 
+      });
+    }
+
+    const questionsRef = db.collection('questions');
+    const q = questionsRef.where('date', '==', date)
+                          .where('difficulty', '==', difficulty);
+    
+    const snapshot = await q.get();
+    const questions = [];
+    
+    snapshot.forEach(doc => {
+      questions.push({ id: doc.id, ...doc.data() });
+    });
+
+    res.json(questions);
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    res.status(500).json({ error: "Failed to fetch questions" });
+  }
+});
+
+// Execute code with Judge0 and log to Firebase
 app.post('/execute', async (req, res) => {
-  const { source_code, language, stdin, userId } = req.body;
+  const { source_code, language, stdin, userId, questionId } = req.body;
   
   // Validate input
   if (!source_code || !language) {
@@ -74,9 +108,9 @@ app.post('/execute', async (req, res) => {
     // Log execution to Firebase if available
     if (admin.apps.length) {
       try {
-        const db = admin.firestore();
         await db.collection('code_executions').add({
           userId: userId || 'anonymous',
+          questionId: questionId || null,
           code: source_code,
           language,
           result: response.data,
@@ -127,6 +161,7 @@ app.listen(PORT, () => {
   console.log(`🔌 Judge0 API configured`);
   console.log(`🔥 Firebase status: ${admin.apps.length ? 'connected' : 'not connected'}`);
   console.log(`\nEndpoints:`);
+  console.log(`- GET  http://localhost:${PORT}/questions?date=YYYY-MM-DD&difficulty=easy`);
   console.log(`- POST http://localhost:${PORT}/execute`);
   console.log(`- GET  http://localhost:${PORT}/health\n`);
 });
